@@ -19,11 +19,28 @@
         <input type="file" accept="image/*" @change="handleFileChange" required />
       </label>
 
-      <button type="submit">铸造</button>
+      <button type="submit" class="button-name" role="button">铸造</button>
     </form>
 
-    <!-- 调用封装的卡牌弹窗 -->
-    <CardModal :visible="showModal" :card="newCard" @close="showModal = false" />
+    <!--overly-->
+    <div v-if="showScratch || showModal" class="overlay">
+    <!-- ✅ 新增：刮刮乐 -->
+      <ScratchCard
+        v-if="showScratch"
+        :width="300"
+        :height="400"
+        @complete="() => { showScratch = false; showModal = true }"
+      >
+        <!-- 刮开后显示卡牌立绘 -->
+        <img 
+          :src="newCard.avatar" 
+          alt="new card" 
+          style="width:100%;height:100%;object-fit:cover;border-radius:8px;" 
+        />
+      </ScratchCard>
+      <!-- 调用封装的卡牌弹窗 --> 
+      <CardModal :visible="showModal" :card="newCard" @close="showModal = false" />
+    </div>
   </div>
 </template>
 
@@ -31,16 +48,18 @@
 import { request } from "../api/request"
 import { getProfile } from "../api/auth"
 import CardModal from "../components/CardModal.vue"
+import ScratchCard from "../components/ScratchToReveal.vue"   // ✅ 新增引入
 
 export default {
   name: "Mint",
-  components: { CardModal },
+  components: { CardModal, ScratchCard },
   data() {
     return {
       balance: 0,
       form: { name: "", profile: "", avatar: "" },
       newCard: {},
-      showModal: false
+      showModal: false,
+      showScratch: false 
     }
   },
   async mounted() {
@@ -89,7 +108,7 @@ export default {
         if (res.code === 200) {
           this.newCard = res.data
           this.balance -= 10
-          this.showModal = true
+          this.showScratch = true
           this.form = { name: "", profile: "", avatar: "" }
         } else {
           alert(res.msg || "铸造失败")
@@ -139,16 +158,75 @@ h2 {
   border-radius: 4px;
 }
 
-.mint-form button {
-  padding: 0.8rem 1.2rem;
-  background-color: #42b983;
-  border: none;
-  border-radius: 5px;
-  color: white;
+.button-name {
+  align-items: center;
+  appearance: none;
+  background-color: #fcfcfd;
+  border-radius: 4px;
+  border-width: 0;
+  box-shadow:
+    rgba(45, 35, 66, 0.2) 0 2px 4px,
+    rgba(45, 35, 66, 0.15) 0 7px 13px -3px,
+    #d6d6e7 0 -3px 0 inset;
+  box-sizing: border-box;
+  color: #36395a;
   cursor: pointer;
+  display: inline-flex;
+  height: 48px;
+  justify-content: center;
+  line-height: 1;
+  list-style: none;
+  overflow: hidden;
+  padding-left: 16px;
+  padding-right: 16px;
+  position: relative;
+  text-align: left;
+  text-decoration: none;
+  transition:
+    box-shadow 0.15s,
+    transform 0.15s;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  white-space: nowrap;
+  will-change: box-shadow, transform;
+  font-size: 18px;
 }
 
-.mint-form button:hover {
-  background-color: #369870;
+.button-name:focus {
+  box-shadow:
+    #d6d6e7 0 0 0 1.5px inset,
+    rgba(45, 35, 66, 0.4) 0 2px 4px,
+    rgba(45, 35, 66, 0.3) 0 7px 13px -3px,
+    #d6d6e7 0 -3px 0 inset;
 }
+
+.button-name:hover {
+  box-shadow:
+    rgba(45, 35, 66, 0.3) 0 4px 8px,
+    rgba(45, 35, 66, 0.2) 0 7px 13px -3px,
+    #d6d6e7 0 -3px 0 inset;
+  transform: translateY(-2px);
+}
+
+.button-name:active {
+  box-shadow: #d6d6e7 0 3px 7px inset;
+  transform: translateY(2px);
+}
+
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+
 </style>
